@@ -10,42 +10,40 @@ import (
 	"github.com/nfnt/resize"
 )
 
-func ReadImage(path string) image.Image {
+// ReadImage opens and decodes an image file from the specified path.
+func ReadImage(path string) (image.Image, error) {
 	inputFile, err := os.Open(path)
 	if err != nil {
-		panic(err)
+		return nil, fmt.Errorf("failed to open file %s: %w", path, err)
 	}
 	defer inputFile.Close()
 
-	// Decode the image
 	img, _, err := image.Decode(inputFile)
 	if err != nil {
-		fmt.Println(path)
-		panic(err)
+		return nil, fmt.Errorf("failed to decode image %s: %w", path, err)
 	}
-	return img
+	return img, nil
 }
 
-func WriteImage(path string, img image.Image) {
+// WriteImage encodes an image to a file specified by path.
+func WriteImage(path string, img image.Image) error {
 	outputFile, err := os.Create(path)
 	if err != nil {
-		panic(err)
+		return fmt.Errorf("failed to create file %s: %w", path, err)
 	}
 	defer outputFile.Close()
 
-	// Encode the image to the new file
 	err = jpeg.Encode(outputFile, img, nil)
 	if err != nil {
-		panic(err)
+		return fmt.Errorf("failed to encode and save image %s: %w", path, err)
 	}
+	return nil
 }
 
+// Grayscale converts an image to grayscale.
 func Grayscale(img image.Image) image.Image {
-	// Create a new grayscale image
 	bounds := img.Bounds()
 	grayImg := image.NewGray(bounds)
-
-	// Convert each pixel to grayscale
 	for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
 		for x := bounds.Min.X; x < bounds.Max.X; x++ {
 			originalPixel := img.At(x, y)
@@ -56,6 +54,7 @@ func Grayscale(img image.Image) image.Image {
 	return grayImg
 }
 
+// Resize resizes an image to newWidth x newHeight using the Lanczos3 resampling method.
 func Resize(img image.Image) image.Image {
 	newWidth := uint(500)
 	newHeight := uint(500)
